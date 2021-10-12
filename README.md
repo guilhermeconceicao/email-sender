@@ -1,5 +1,5 @@
 ##About this project
-A service for email sending using SendGrid, Azure Service Bus, Azure Blob Storage and .Net Core
+A service for email sending using SendGrid, Azure Service Bus, Azure Blob Storage, Serilog and .Net Core
 
 ##How
 This microservice has a service bus consumer (broker) that needs the following message:
