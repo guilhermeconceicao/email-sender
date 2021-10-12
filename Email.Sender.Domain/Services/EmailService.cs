@@ -34,12 +34,13 @@ namespace Email.Sender.Domain.Services
             var sendGridMessage = await CreateSendGridMessage(message);
             var response = await sendGridClient.SendEmailAsync(sendGridMessage);
             logger.Debug("StatusCode {StatusCode} - Email sent. FromAddress: {FromAddress}. FromName: {FromName} Tos: {RecipientsSplitBySemicolon}",
-                response?.StatusCode.ToString(), EnvironmentVars.EmailFromAddress, EnvironmentVars.EmailFromName, message.RecipientsSplitBySemicolon);
+                response?.StatusCode.ToString(), EnvironmentVars.EmailFromAddress, EnvironmentVars.EmailFromName, string.Join(",", message.Recipients));
         }
 
         private void ValidateMessage(SendEmailMessage message)
         {
-            if (string.IsNullOrWhiteSpace(message.RecipientsSplitBySemicolon)
+            if (message.Recipients == null ||
+                !message.Recipients.Any()
                 || string.IsNullOrWhiteSpace(message.Subject)
                 || string.IsNullOrWhiteSpace(message.HtmlContentBase64))
             {
@@ -51,7 +52,7 @@ namespace Email.Sender.Domain.Services
         {
             var sendGridMessage = new SendGridMessage();
             sendGridMessage.SetFrom(new EmailAddress(EnvironmentVars.EmailFromAddress, EnvironmentVars.EmailFromName));
-            sendGridMessage.AddTos(GetRecipientsEmails(message.RecipientsSplitBySemicolon));
+            sendGridMessage.AddTos(GetRecipientsEmails(message.Recipients));
             sendGridMessage.SetSubject(message.Subject);
             sendGridMessage.AddContent(MimeType.Html, GetHtmlContent(message.HtmlContentBase64));
             if (message.Attachments?.Any() ?? false)
@@ -60,15 +61,11 @@ namespace Email.Sender.Domain.Services
             return sendGridMessage;
         }
 
-        private List<EmailAddress> GetRecipientsEmails(string recipientsSplitBySemicolon)
+        private List<EmailAddress> GetRecipientsEmails(string[] recipients)
         {
-            string[] recipients = recipientsSplitBySemicolon.Split(';');
-
-            var tos = new List<EmailAddress>();
-            foreach (string recipientEmail in recipients)
-                tos.Add(new EmailAddress(recipientEmail.RemoveWhiteSpaces()));
-
-            return tos;
+            return recipients
+                .Select(recipientEmail => new EmailAddress(recipientEmail.RemoveWhiteSpaces()))
+                .ToList();
         }
 
         private string GetHtmlContent(string htmlContentBase64)

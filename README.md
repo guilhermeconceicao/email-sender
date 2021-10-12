@@ -7,7 +7,7 @@ This microservice has a service bus consumer (broker) that needs the following m
 ```
     public class SendEmailMessage
     {
-        public string RecipientsSplitBySemicolon { get; set; } //required
+        public string[] Recipients { get; set; } //required
         public string Subject { get; set; } //required
         public string HtmlContentBase64 { get; set; } //required
         public IEnumerable<AttachmentEmail> Attachments { get; set; } //not required
@@ -15,13 +15,7 @@ This microservice has a service bus consumer (broker) that needs the following m
 ```
 Properties explanation:
 
-- `RecipientsSplitBySemicolon`: Email recipients. If you want more than one recipient, split the recipients by semicolon. E.g.:
-```
-guilherme@gmail.com (one recipient)
-OR
-guilherme@gmail.com; john@hotmail.com; peter@outlook.com (multiple recipients)
-
-```
+- `Recipients`: Email recipients list.
 - `Subject`: The subject.
 - `HtmlContentBase64`: The email content must be HTML assembled. Send the HTML in base 64 format.
 - `Attachments`: The attachments. The Azure Blob Storage infos for recover the file + fileName (with the extension)

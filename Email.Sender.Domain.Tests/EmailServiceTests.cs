@@ -28,15 +28,14 @@ namespace Email.Sender.Domain.Tests
         }
 
         [Theory]
-        [InlineData("   ", "Subject", "Html")]
-        [InlineData("Address", "    ", "Html")]
-        [InlineData("Address", "Subject", "     ")]
-        public void ValidMessage_MessageWithWhiteSpace_ThrowsArgumentException(string toAddress, string subject, string html)
+        [InlineData("    ", "Html")]
+        [InlineData("Subject", "     ")]
+        public void ValidMessage_MessageWithWhiteSpace_ThrowsArgumentException(string subject, string html)
         {
             //Arrange
             SendEmailMessage message = new SendEmailMessage
             {
-                RecipientsSplitBySemicolon = toAddress,
+                Recipients = new string[] { "address" },
                 Subject = subject,
                 HtmlContentBase64 = html
             };
@@ -48,17 +47,49 @@ namespace Email.Sender.Domain.Tests
         }
 
         [Theory]
-        [InlineData(null, "Subject", "Html")]
-        [InlineData("Address", null, "Html")]
-        [InlineData("Address", "Subject", null)]
-        public void ValidMessage_MessageWithNull_ThrowsArgumentException(string toAddress, string subject, string html)
+        [InlineData(null, "Html")]
+        [InlineData("Subject", null)]
+        public void ValidMessage_MessageWithNull_ThrowsArgumentException(string subject, string html)
         {
             //Arrange
             SendEmailMessage message = new SendEmailMessage
             {
-                RecipientsSplitBySemicolon = toAddress,
+                Recipients = new string[] { "address" },
                 Subject = subject,
                 HtmlContentBase64 = html
+            };
+
+            //Act + Assert
+            emailService.Invoking(s => s.SendEmail(message).Wait()).Should().Throw<ArgumentException>().WithMessage("Invalid message (Parameter 'SendEmailMessage')");
+
+            sendGridClient.Verify(x => x.SendEmailAsync(It.IsAny<SendGridMessage>(), It.IsAny<CancellationToken>()), Times.Never());
+        }
+
+        [Fact]
+        public void ValidMessage_MessageWithoutRecipientsNull_ThrowsArgumentException()
+        {
+            //Arrange
+            SendEmailMessage message = new SendEmailMessage
+            {
+                Subject = "Subject",
+                HtmlContentBase64 = "html"
+            };
+
+            //Act + Assert
+            emailService.Invoking(s => s.SendEmail(message).Wait()).Should().Throw<ArgumentException>().WithMessage("Invalid message (Parameter 'SendEmailMessage')");
+
+            sendGridClient.Verify(x => x.SendEmailAsync(It.IsAny<SendGridMessage>(), It.IsAny<CancellationToken>()), Times.Never());
+        }
+
+        [Fact]
+        public void ValidMessage_MessageWithoutRecipientsEmpty_ThrowsArgumentException()
+        {
+            //Arrange
+            SendEmailMessage message = new SendEmailMessage
+            {
+                Recipients = new string[] { },
+                Subject = "Subject",
+                HtmlContentBase64 = "html"
             };
 
             //Act + Assert
@@ -71,10 +102,9 @@ namespace Email.Sender.Domain.Tests
         public void ValidMessage_MessageWithAttachmentNull_ThrowsArgumentException()
         {
             //Arrange
-            Guid blobId = Guid.NewGuid();
             SendEmailMessage message = new SendEmailMessage
             {
-                RecipientsSplitBySemicolon = "Address",
+                Recipients = new string[] { "Address" },
                 Subject = "Subject",
                 HtmlContentBase64 = GetHtmlBase64(),
                 Attachments = new List<AttachmentEmail>
@@ -100,7 +130,7 @@ namespace Email.Sender.Domain.Tests
             //Arrange
             SendEmailMessage message = new SendEmailMessage
             {
-                RecipientsSplitBySemicolon = "addres@email.com",
+                Recipients = new string[] { "addres@email.com" },
                 Subject = "Subject",
                 HtmlContentBase64 = GetHtmlBase64(),
                 Attachments = new List<AttachmentEmail>
@@ -141,7 +171,7 @@ namespace Email.Sender.Domain.Tests
             //Arrange
             SendEmailMessage message = new SendEmailMessage
             {
-                RecipientsSplitBySemicolon = "addres@email.com; teste@hotmail.com",
+                Recipients = new string[] { "addres@email.com", "teste@hotmail.com" },
                 Subject = "Subject",
                 HtmlContentBase64 = GetHtmlBase64(),
                 Attachments = new List<AttachmentEmail>
