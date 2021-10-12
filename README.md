@@ -1,7 +1,7 @@
-##About this project
+# About this project
 A service for email sending using SendGrid, Azure Service Bus, Azure Blob Storage, Serilog and .Net Core
 
-##How
+## How?
 This microservice has a service bus consumer (broker) that needs the following message:
 
 ```
@@ -38,7 +38,7 @@ guilherme@gmail.com; john@hotmail.com; peter@outlook.com (multiple recipients)
         public string MimeType { get; set; }
     }
 ```
-# Email.Sender.Template
+## Email.Sender.Template
 An HTML example
 
 ```
